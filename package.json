@@ -7,6 +7,8 @@
     "name": "mbierman"
   },
   "dependencies": {
-    "express": "^4.15.4"
+    "express": "^4.15.4",
+    "ical.js": "^1.2.2",
+    "moment": "^2.18.1"
   }
 }
