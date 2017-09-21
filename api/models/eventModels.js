@@ -1,4 +1,7 @@
 ﻿
+var testICalURL = "https://calendar.google.com/calendar/ical/matthewbierman.com_qmsnneuuh1k6btlqli2ina82s4%40group.calendar.google.com/public/basic.ics"
+var testICalLocalPath = ".\\data\\testCalendar.ics"
+
 var event = function (title, location, startDate, endDate)
 {
     var moment = require('moment');
@@ -11,7 +14,7 @@ var event = function (title, location, startDate, endDate)
     };
 };
 
-var getTestEventList = function ()
+var getTestEventList = function (callback)
 {
     var eventList = [];
 
@@ -23,11 +26,11 @@ var getTestEventList = function ()
 
     eventList.push(testEvent2);
 
-    return eventList;
+    callback(null, eventList);
 
 };
 
-var iCalToEvents = function(iCalData)
+var iCalToEvents = function (iCalData)
 {
     var iCal = require('ical.js');
 
@@ -54,26 +57,69 @@ var iCalToEvents = function(iCalData)
     return eventList;
 };
 
-var getEventListFromLocalTestICal = function ()
+var getEventListFromLocalTestICal = function (callback)
 {
     var fs = require('fs');
 
-    var testICalPath = ".\\data\\testCalendar.ics"
+    var iCalendarData = fs.readFile(
+        testICalLocalPath,
+        'utf8',
+        function (error, data)
+        {
+            if (error)
+            {
+                callback(error, null);
+            }
+            else
+            {
+                var eventList = iCalToEvents(data);
 
-    var iCalendarData = fs.readFileSync(testICalPath, 'utf8');
-
-    return iCalToEvents(iCalendarData);
+                callback(null, eventList);
+            }
+        }
+    );
 };
 
-var getEventList = function ()
+var getEventListRemoteTestICal = function (callback)
 {
-    var eventList = [];
+    var request = require('request');
+    request.get(testICalURL, function (error, response, body)
+    {
+        if (error)
+        {
+            callback(error, null);
+        }
+        else if (response.statusCode != 200)
+        {
+            callback("yeah, I don't know, jp?", null);
+        }
+        else
+        {
+            var eventList = iCalToEvents(body);
 
-    eventList.push(getTestEventList());
+            callback(null, eventList);
+        }
+    });
+};
 
-    eventList.push(getEventListFromLocalTestICal());
+var getEventList = function (callback)
+{
+    var async = require('async');
 
-    return eventList;
+    var asyncTasks = [];
+
+    asyncTasks.push(getTestEventList);
+    asyncTasks.push(getEventListFromLocalTestICal);
+    asyncTasks.push(getEventListRemoteTestICal);
+
+    async.parallel(asyncTasks, function (error, data)
+    {
+        var eventList = [].concat.apply([], data); //flatten arrays
+        callback(eventList);
+    });
+
 }
 
 module.exports = getEventList;
+
+
