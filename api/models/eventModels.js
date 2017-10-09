@@ -1,6 +1,7 @@
 ﻿
 var testICalURL = "https://calendar.google.com/calendar/ical/matthewbierman.com_qmsnneuuh1k6btlqli2ina82s4%40group.calendar.google.com/public/basic.ics"
 var testICalLocalPath = ".\\data\\testCalendar.ics"
+var productionICalURL = "https://calendar.google.com/calendar/ical/qccoders%40gmail.com/public/basic.ics";
 
 var event = function (title, location, startDate, endDate)
 {
@@ -102,15 +103,39 @@ var getEventListRemoteTestICal = function (callback)
     });
 };
 
+var getEventListRemoteProductionICal = function (callback)
+{
+    var request = require('request');
+    request.get(productionICalURL, function (error, response, body)
+    {
+        if (error)
+        {
+            callback(error, null);
+        }
+        else if (response.statusCode != 200)
+        {
+            callback("yeah, I don't know, jp?", null);
+        }
+        else
+        {
+            var eventList = iCalToEvents(body);
+
+            callback(null, eventList);
+        }
+    });
+};
+
 var getEventList = function (callback)
 {
     var async = require('async');
 
     var asyncTasks = [];
 
-    asyncTasks.push(getTestEventList);
-    asyncTasks.push(getEventListFromLocalTestICal);
-    asyncTasks.push(getEventListRemoteTestICal);
+    //asyncTasks.push(getTestEventList);
+    //asyncTasks.push(getEventListFromLocalTestICal);
+    //asyncTasks.push(getEventListRemoteTestICal);
+    asyncTasks.push(getEventListRemoteProductionICal);
+
 
     async.parallel(asyncTasks, function (error, data)
     {
