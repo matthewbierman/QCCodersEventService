@@ -1,4 +1,6 @@
-﻿const moment = require('moment')
+﻿const fs = require('fs');
+const iCal = require('ical.js')
+const moment = require('moment')
 const {testICalURL, testICalLocalPath, productionICalURL} = require('../../data/endpoints')
 
 const event = (title = '', location = '', startDate, endDate) => (
@@ -10,70 +12,49 @@ const event = (title = '', location = '', startDate, endDate) => (
   }
 )
 
-const getTestEventList = function (callback)
-{
-    var eventList = [];
+const getTestEventList =  (callback) => {
+  
+  const testEvent1 = event("Test Event 1", "Test Location 1", '01/01/2017 14:00', '01/01/2017 16:00')
+  const testEvent2 = event("Test Event 2", "Test Location 2", '01/15/2017 14:00', '01/15/2017 16:00')
 
-    var testEvent1 = event("Test Event 1", "Test Location 1", '01/01/2017 14:00', '01/01/2017 16:00');
+  callback([testEvent1,testEvent2])
+}
 
-    eventList.push(testEvent1);
+const iCalToEvents = (iCalData) => {
 
-    var testEvent2 = event("Test Event 2", "Test Location 2", '01/15/2017 14:00', '01/15/2017 16:00');
+  const jCal = iCal.parse(iCalData);
+  const {getAllSubcomponents} = new iCal.Component(jCal);
+  const jCalEvents = getAllSubcomponents("vevent");
 
-    eventList.push(testEvent2);
+  const eventList = jCalEvents.map(jCalEvent => event(
+    jCalEvent.getFirstPropertyValue("summary"),
+    jCalEvent.getFirstPropertyValue("location"),
+    jCalEvent.getFirstPropertyValue("dtstart"),
+    jCalEvent.getFirstPropertyValue("dtend")
+  ))
+  
+  return eventList;
+}
 
-    callback(eventList);
+const getEventListFromLocalTestICal = (callback) => {
+    
+  var iCalendarData = fs.readFile(
+      testICalLocalPath,
+      'utf8',
+      function (error, data)
+      {
+          if (error)
+          {
+              callback(error, null);
+          }
+          else
+          {
+              var eventList = iCalToEvents(data);
 
-};
-
-var iCalToEvents = function (iCalData)
-{
-    var iCal = require('ical.js');
-
-    var eventList = [];
-
-    var jCal = iCal.parse(iCalData);
-
-    var jCalComponent = new iCal.Component(jCal);
-
-    var jCalEvents = jCalComponent.getAllSubcomponents("vevent");
-
-    for (var i = 0; i < jCalEvents.length; i++)
-    {
-        var jCalEvent = jCalEvents[i];
-        var eventData = event(
-            jCalEvent.getFirstPropertyValue("summary"),
-            jCalEvent.getFirstPropertyValue("location"),
-            jCalEvent.getFirstPropertyValue("dtstart"),
-            jCalEvent.getFirstPropertyValue("dtend")
-        );
-        eventList.push(eventData);
-    }
-
-    return eventList;
-};
-
-var getEventListFromLocalTestICal = function (callback)
-{
-    var fs = require('fs');
-
-    var iCalendarData = fs.readFile(
-        testICalLocalPath,
-        'utf8',
-        function (error, data)
-        {
-            if (error)
-            {
-                callback(error, null);
-            }
-            else
-            {
-                var eventList = iCalToEvents(data);
-
-                callback(null, eventList);
-            }
-        }
-    );
+              callback(null, eventList);
+          }
+      }
+  );
 };
 
 var getEventListRemoteTestICal = function (callback)
