@@ -37,27 +37,17 @@ const getEventListFromLocalTestICal = () => {
 
 }
 
-const getEventListRemoteTestICal = () => {
-    
-  return axios.get(testICalURL)
+const getEventListRemoteTestICal = () => axios.get(testICalURL)
 
-}
+const getEventListRemoteProductionICal = () => axios.get(productionICalURL, {responseType: 'text'})
 
-const getEventListRemoteProductionICal = () => {
-
-  return axios.get(productionICalURL, {responseType: 'text'})
-
-}
-
-const getEventList = () => {
+const getEventList = () =>
    
     //getEventListFromLocalTestICal()
     //getEventListRemoteTestICal()
-    return getEventListRemoteProductionICal()
+    getEventListRemoteProductionICal()
     .then(res => iCalToEvents(res.data))
     .catch(e => console.log(e))
-
-}
 
 module.exports = getEventList;
 
