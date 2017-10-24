@@ -24,8 +24,8 @@ const getTestEventList =  (callback) => {
 const iCalToEvents = (iCalData) => {
 
   const jCal = iCal.parse(iCalData);
-  const {getAllSubcomponents} = new iCal.Component(jCal);
-  const jCalEvents = getAllSubcomponents("vevent");
+  const comp = new iCal.Component(jCal);
+  const jCalEvents = comp.getAllSubcomponents("vevent");
 
   const eventList = jCalEvents.map(jCalEvent => event(
     jCalEvent.getFirstPropertyValue("summary"),
@@ -37,7 +37,7 @@ const iCalToEvents = (iCalData) => {
   return eventList
 }
 
-const getEventListFromLocalTestICal = (callback) => {
+const getEventListFromLocalTestICal = () => {
     
   fs.readFile(testICalLocalPath, 'utf8', (error, data) => {
     data ? callback(undefined, iCalToEvents(data)) : callback(error, undefined)
@@ -45,53 +45,26 @@ const getEventListFromLocalTestICal = (callback) => {
 
 }
 
-const getEventListRemoteTestICal = (callback) => {
+const getEventListRemoteTestICal = () => {
     
-    axios.get(testICalURL)
-    .then(res => callback(undefined, iCalToEvents(res.data.body)))
-    .catch(e => callback(error, undefined))
+  return axios.get(testICalURL)
 
 }
 
-var getEventListRemoteProductionICal = function (callback)
-{
-    var request = require('request');
-    request.get(productionICalURL, function (error, response, body)
-    {
-        if (error)
-        {
-            callback(error, null);
-        }
-        else if (response.statusCode != 200)
-        {
-            callback("yeah, I don't know, jp?", null);
-        }
-        else
-        {
-            var eventList = iCalToEvents(body);
+const getEventListRemoteProductionICal = () => {
 
-            callback(undefined, eventList);
-        }
-    });
-};
+  return axios.get(productionICalURL, {responseType: 'text'})
 
-var getEventList = function (callback)
-{
-    var async = require('async');
+}
 
-    var asyncTasks = [];
-
-    //asyncTasks.push(getTestEventList);
-    //asyncTasks.push(getEventListFromLocalTestICal);
-    //asyncTasks.push(getEventListRemoteTestICal);
-    asyncTasks.push(getEventListRemoteProductionICal);
-
-
-    async.parallel(asyncTasks, function (error, data)
-    {
-        var eventList = [].concat.apply([], data); //flatten arrays
-        callback(eventList);
-    });
+const getEventList = () => {
+   
+    //getTestEventList()
+    //getEventListFromLocalTestICal()
+    //getEventListRemoteTestICal()
+    return getEventListRemoteProductionICal()
+    .then(res => iCalToEvents(res.data))
+    .catch(e => console.log(e))
 
 }
 
