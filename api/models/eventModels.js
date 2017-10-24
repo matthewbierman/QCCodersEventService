@@ -10,7 +10,7 @@ const event = (title = '', location = '', startDate, endDate) => (
   }
 )
 
-var getTestEventList = function (callback)
+const getTestEventList = function (callback)
 {
     var eventList = [];
 
@@ -22,7 +22,7 @@ var getTestEventList = function (callback)
 
     eventList.push(testEvent2);
 
-    callback(null, eventList);
+    callback(eventList);
 
 };
 
