@@ -13,14 +13,6 @@ const event = (title = '', location = '', startDate, endDate) => (
   }
 )
 
-const getTestEventList =  (callback) => {
-  
-  const testEvent1 = event("Test Event 1", "Test Location 1", '01/01/2017 14:00', '01/01/2017 16:00')
-  const testEvent2 = event("Test Event 2", "Test Location 2", '01/15/2017 14:00', '01/15/2017 16:00')
-
-  callback(undefined, [testEvent1,testEvent2])
-}
-
 const iCalToEvents = (iCalData) => {
 
   const jCal = iCal.parse(iCalData);
@@ -59,7 +51,6 @@ const getEventListRemoteProductionICal = () => {
 
 const getEventList = () => {
    
-    //getTestEventList()
     //getEventListFromLocalTestICal()
     //getEventListRemoteTestICal()
     return getEventListRemoteProductionICal()
