@@ -1,16 +1,14 @@
-﻿const {testICalURL, testICalLocalPath, productionICalURL} = require('../../data/endpoints')
+﻿const moment = require('moment')
+const {testICalURL, testICalLocalPath, productionICalURL} = require('../../data/endpoints')
 
-var event = function (title, location, startDate, endDate)
-{
-    var moment = require('moment');
-
-    return {
-        title: title,
-        location: location,
-        startDate: moment(startDate).format(),
-        endDate: moment(endDate).format(),
-    };
-};
+const event = (title = '', location = '', startDate, endDate) => (
+  {
+    title,
+    location,
+    startDate: moment(startDate).format(),
+    endDate: moment(endDate).format()
+  }
+)
 
 var getTestEventList = function (callback)
 {
