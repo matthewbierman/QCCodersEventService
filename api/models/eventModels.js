@@ -17,7 +17,7 @@ const getTestEventList =  (callback) => {
   const testEvent1 = event("Test Event 1", "Test Location 1", '01/01/2017 14:00', '01/01/2017 16:00')
   const testEvent2 = event("Test Event 2", "Test Location 2", '01/15/2017 14:00', '01/15/2017 16:00')
 
-  callback([testEvent1,testEvent2])
+  callback(undefined, [testEvent1,testEvent2])
 }
 
 const iCalToEvents = (iCalData) => {
@@ -51,7 +51,7 @@ const getEventListFromLocalTestICal = (callback) => {
           {
               var eventList = iCalToEvents(data);
 
-              callback(null, eventList);
+              callback(undefined, eventList);
           }
       }
   );
@@ -74,7 +74,7 @@ var getEventListRemoteTestICal = function (callback)
         {
             var eventList = iCalToEvents(body);
 
-            callback(null, eventList);
+            callback(undefined, eventList);
         }
     });
 };
@@ -96,7 +96,7 @@ var getEventListRemoteProductionICal = function (callback)
         {
             var eventList = iCalToEvents(body);
 
-            callback(null, eventList);
+            callback(undefined, eventList);
         }
     });
 };
