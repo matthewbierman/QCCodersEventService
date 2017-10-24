@@ -1,6 +1,7 @@
 ﻿const fs = require('fs');
 const iCal = require('ical.js')
 const moment = require('moment')
+const axios = require('axios');
 const {testICalURL, testICalLocalPath, productionICalURL} = require('../../data/endpoints')
 
 const event = (title = '', location = '', startDate, endDate) => (
@@ -41,30 +42,16 @@ const getEventListFromLocalTestICal = (callback) => {
   fs.readFile(testICalLocalPath, 'utf8', (error, data) => {
     data ? callback(undefined, iCalToEvents(data)) : callback(error, undefined)
   })
-  
+
 }
 
-var getEventListRemoteTestICal = function (callback)
-{
-    var request = require('request');
-    request.get(testICalURL, function (error, response, body)
-    {
-        if (error)
-        {
-            callback(error, null);
-        }
-        else if (response.statusCode != 200)
-        {
-            callback("yeah, I don't know, jp?", null);
-        }
-        else
-        {
-            var eventList = iCalToEvents(body);
+const getEventListRemoteTestICal = (callback) => {
+    
+    axios.get(testICalURL)
+    .then(res => callback(undefined, iCalToEvents(res.data.body)))
+    .catch(e => callback(error, undefined))
 
-            callback(undefined, eventList);
-        }
-    });
-};
+}
 
 var getEventListRemoteProductionICal = function (callback)
 {
