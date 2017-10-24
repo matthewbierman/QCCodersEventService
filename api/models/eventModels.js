@@ -33,29 +33,16 @@ const iCalToEvents = (iCalData) => {
     jCalEvent.getFirstPropertyValue("dtend")
   ))
   
-  return eventList;
+  return eventList
 }
 
 const getEventListFromLocalTestICal = (callback) => {
     
-  var iCalendarData = fs.readFile(
-      testICalLocalPath,
-      'utf8',
-      function (error, data)
-      {
-          if (error)
-          {
-              callback(error, null);
-          }
-          else
-          {
-              var eventList = iCalToEvents(data);
-
-              callback(undefined, eventList);
-          }
-      }
-  );
-};
+  fs.readFile(testICalLocalPath, 'utf8', (error, data) => {
+    data ? callback(undefined, iCalToEvents(data)) : callback(error, undefined)
+  })
+  
+}
 
 var getEventListRemoteTestICal = function (callback)
 {
