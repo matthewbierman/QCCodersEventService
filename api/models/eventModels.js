@@ -1,7 +1,4 @@
-﻿
-var testICalURL = "https://calendar.google.com/calendar/ical/matthewbierman.com_qmsnneuuh1k6btlqli2ina82s4%40group.calendar.google.com/public/basic.ics"
-var testICalLocalPath = ".\\data\\testCalendar.ics"
-var productionICalURL = "https://calendar.google.com/calendar/ical/qccoders%40gmail.com/public/basic.ics";
+﻿const {testICalURL, testICalLocalPath, productionICalURL} = require('../../data/endpoints')
 
 var event = function (title, location, startDate, endDate)
 {
