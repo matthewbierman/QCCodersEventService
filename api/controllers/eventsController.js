@@ -1,13 +1,5 @@
-﻿'use strict';
+﻿const getEventList = require('../models/eventModels')
 
-var eventList = require('../models/eventModels'); //importing model
+const getRecentAndUpcomingEvents = (request, response) => getEventList().then(data => response.json(data))
 
-exports.getRecentAndUpcomingEvents = function (request, response)
-{
-    eventList(
-        function (data)
-        {
-            response.json(data);
-        }
-    );
-};
+module.exports = {getRecentAndUpcomingEvents}

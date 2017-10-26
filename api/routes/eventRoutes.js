@@ -1,11 +1,3 @@
-﻿'use strict';
+﻿const events = require('../controllers/eventsController')
 
-module.exports = function (app)
-{
-    var events = require('../controllers/eventsController');
-
-    // events Routes
-    app.route('/events')
-        .get(events.getRecentAndUpcomingEvents)
- 
-};
+module.exports = (app) => app.route('/events').get(events.getRecentAndUpcomingEvents)
