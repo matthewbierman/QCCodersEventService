@@ -22,8 +22,8 @@ const iCalToEvents = (iCalData) => {
   const eventList = jCalEvents.map(jCalEvent => event(
     jCalEvent.getFirstPropertyValue("summary"),
     jCalEvent.getFirstPropertyValue("location"),
-    jCalEvent.getFirstPropertyValue("dtstart"),
-    jCalEvent.getFirstPropertyValue("dtend")
+    jCalEvent.getFirstPropertyValue("dtstart").toString(),
+    jCalEvent.getFirstPropertyValue("dtend").toString()
   ))
   
   return eventList
