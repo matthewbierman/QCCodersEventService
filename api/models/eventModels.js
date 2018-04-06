@@ -2,16 +2,17 @@
 const iCal = require('ical.js')
 const moment = require('moment')
 const axios = require('axios');
-const {testICalURL, testICalLocalPath, productionICalURL} = require('../../data/endpoints')
+const { testICalURL, testICalLocalPath, productionICalURL, meetupsAPIFetchEventsURL } = require('../../data/endpoints')
 
-const event = (title = '', location = '', startDate, endDate) => (
-  {
+const event = (title = '', description = '', location = '', startDate, endDate) => {
+  return {
     title,
+    description,
     location,
-    startDate: moment(startDate).format(),
-    endDate: moment(endDate).format()
+    startDate: startDate.format(),
+    endDate: endDate.format()
   }
-)
+}
 
 const iCalToEvents = (iCalData) => {
 
@@ -21,33 +22,69 @@ const iCalToEvents = (iCalData) => {
 
   const eventList = jCalEvents.map(jCalEvent => event(
     jCalEvent.getFirstPropertyValue("summary"),
+    '',
     jCalEvent.getFirstPropertyValue("location"),
-    jCalEvent.getFirstPropertyValue("dtstart").toString(),
-    jCalEvent.getFirstPropertyValue("dtend").toString()
+    moment(jCalEvent.getFirstPropertyValue("dtstart").toString()),
+    moment(jCalEvent.getFirstPropertyValue("dtend").toString())
   ))
-  
+
+  return eventList
+}
+
+const meetupVenueToEventLocation = (venue) => {
+  var location = '';
+
+  if (venue != null) {
+    location = venue.name
+      + '\n'
+      + venue.address_1
+      + '\n'
+      + venue.city
+  }
+
+  return location;
+}
+
+const meetupDataToEvents = (data) => {
+
+  const meetupDateFormat = "YYYY-MM-DD HH:mm";
+  const meetupDurationFormat = "ms";
+
+  const eventList = data.map(meetup => event(
+    meetup.name,
+    meetup.description,
+    meetupVenueToEventLocation(meetup.venue),
+    moment(meetup.local_date + " " + moment.local_time, meetupDateFormat),
+    moment(meetup.local_date + " " + moment.local_time, meetupDateFormat).add(meetup.duration, meetupDurationFormat)
+  ))
+
   return eventList
 }
 
 const getEventListFromLocalTestICal = () => {
-    
   fs.readFile(testICalLocalPath, 'utf8', (error, data) => {
     data ? callback(undefined, iCalToEvents(data)) : callback(error, undefined)
   })
-
 }
 
 const getEventListRemoteTestICal = () => axios.get(testICalURL)
 
-const getEventListRemoteProductionICal = () => axios.get(productionICalURL, {responseType: 'text'})
+const getEventListRemoteProductionICal = () => axios.get(productionICalURL, { responseType: 'text' })
+
+const getEventListFromMeetup = () => axios.get(meetupsAPIFetchEventsURL)
 
 const getEventList = () =>
-   
-    //getEventListFromLocalTestICal()
-    //getEventListRemoteTestICal()
-    getEventListRemoteProductionICal()
-    .then(res => iCalToEvents(res.data))
-    .catch(e => console.log(e))
+  Promise.all(
+    [
+      getEventListRemoteProductionICal()
+        .then(res => iCalToEvents(res.data))
+        .catch(e => console.log(e)),
+      getEventListFromMeetup()
+        .then(res => meetupDataToEvents(res.data))
+        .catch(e => console.log(e))
+    ]
+  )
+    .then(res => { return res[0].concat(res[1]) })
 
 module.exports = getEventList;
 
