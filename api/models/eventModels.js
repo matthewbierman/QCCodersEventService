@@ -2,10 +2,11 @@
 const iCal = require('ical.js')
 const moment = require('moment')
 const axios = require('axios')
-const { testICalURL, testICalLocalPath, productionICalURL, meetupsAPIFetchEventsURL, meetupsPast10EventsQueryString, meetupsNext10EventsQueryString } = require('../../data/endpoints')
+const { testICalURL, testICalLocalPath, productionICalURL, meetupsAPIFetchEventsURL, meetupsPast10EventsQueryString, meetupsUpcoming10EventsQueryString } = require('../../data/endpoints')
 
-const event = (title = '', description = '', location = '', startDate, endDate) => {
+const event = (source= '', title = '', description = '', location = '', startDate, endDate) => {
   return {
+    source,
     title,
     description,
     location,
@@ -14,13 +15,14 @@ const event = (title = '', description = '', location = '', startDate, endDate) 
   }
 }
 
-const iCalToEvents = (iCalData) => {
+const iCalToEvents = (source, iCalData) => {
 
   const jCal = iCal.parse(iCalData);
   const comp = new iCal.Component(jCal);
   const jCalEvents = comp.getAllSubcomponents("vevent");
 
   const eventList = jCalEvents.map(jCalEvent => event(
+    "ical: " + source,
     jCalEvent.getFirstPropertyValue("summary"),
     '',
     jCalEvent.getFirstPropertyValue("location"),
@@ -45,12 +47,13 @@ const meetupVenueToEventLocation = (venue) => {
   return location;
 }
 
-const meetupDataToEvents = (data) => {
+const meetupDataToEvents = (source, data) => {
 
   const meetupDateFormat = "YYYY-MM-DD HH:mm";
   const meetupDurationFormat = "ms";
 
   const eventList = data.map(meetup => event(
+    'meetups: ' + source,
     meetup.name,
     meetup.description,
     meetupVenueToEventLocation(meetup.venue),
@@ -73,7 +76,7 @@ const getEventListRemoteProductionICal = () => axios.get(productionICalURL, { re
 
 const getPastEventListFromMeetup = () => axios.get(meetupsAPIFetchEventsURL + "?" + meetupsPast10EventsQueryString)
 
-const getNextEventListFromMeetup = () => axios.get(meetupsAPIFetchEventsURL + "?" + meetupsNext10EventsQueryString)
+const getUpcomingEventListFromMeetup = () => axios.get(meetupsAPIFetchEventsURL + "?" + meetupsUpcoming10EventsQueryString)
 
 const flattenArrays = (arrays) => [].concat.apply([], arrays);
 
@@ -81,13 +84,13 @@ const getEventList = () =>
   Promise.all(
     [
       getEventListRemoteProductionICal()
-        .then(res => iCalToEvents(res.data))
+        .then(res => iCalToEvents('google calendar', res.data))
         .catch(e => console.log(e)),
       getPastEventListFromMeetup()
-        .then(res => meetupDataToEvents(res.data))
+        .then(res => meetupDataToEvents('past', res.data))
         .catch(e => console.log(e)),
-      getNextEventListFromMeetup()
-        .then(res => meetupDataToEvents(res.data))
+      getUpcomingEventListFromMeetup()
+        .then(res => meetupDataToEvents('upcoming', res.data))
         .catch(e => console.log(e))
     ]
   )
