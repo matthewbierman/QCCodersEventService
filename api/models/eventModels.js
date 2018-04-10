@@ -1,8 +1,8 @@
 ﻿const fs = require('fs');
 const iCal = require('ical.js')
 const moment = require('moment')
-const axios = require('axios');
-const { testICalURL, testICalLocalPath, productionICalURL, meetupsAPIFetchEventsURL } = require('../../data/endpoints')
+const axios = require('axios')
+const { testICalURL, testICalLocalPath, productionICalURL, meetupsAPIFetchEventsURL, meetupsPast10EventsQueryString, meetupsNext10EventsQueryString } = require('../../data/endpoints')
 
 const event = (title = '', description = '', location = '', startDate, endDate) => {
   return {
@@ -71,7 +71,11 @@ const getEventListRemoteTestICal = () => axios.get(testICalURL)
 
 const getEventListRemoteProductionICal = () => axios.get(productionICalURL, { responseType: 'text' })
 
-const getEventListFromMeetup = () => axios.get(meetupsAPIFetchEventsURL)
+const getPastEventListFromMeetup = () => axios.get(meetupsAPIFetchEventsURL + "?" + meetupsPast10EventsQueryString)
+
+const getNextEventListFromMeetup = () => axios.get(meetupsAPIFetchEventsURL + "?" + meetupsNext10EventsQueryString)
+
+const flattenArrays = (arrays) => [].concat.apply([], arrays);
 
 const getEventList = () =>
   Promise.all(
@@ -79,12 +83,15 @@ const getEventList = () =>
       getEventListRemoteProductionICal()
         .then(res => iCalToEvents(res.data))
         .catch(e => console.log(e)),
-      getEventListFromMeetup()
+      getPastEventListFromMeetup()
+        .then(res => meetupDataToEvents(res.data))
+        .catch(e => console.log(e)),
+      getNextEventListFromMeetup()
         .then(res => meetupDataToEvents(res.data))
         .catch(e => console.log(e))
     ]
   )
-    .then(res => { return res[0].concat(res[1]) })
+  .then(res => flattenArrays(res))
 
 module.exports = getEventList;
 
