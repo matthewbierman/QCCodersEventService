@@ -1,8 +1,9 @@
 ﻿const fs = require('fs');
 const iCal = require('ical.js')
-const moment = require('moment')
+const moment = require('moment-timezone')
 const axios = require('axios')
 const { testICalURL, testICalLocalPath, productionICalURL, meetupsAPIFetchEventsURL, meetupsPast10EventsQueryString, meetupsUpcoming10EventsQueryString } = require('../../data/endpoints')
+const { defaultTimeZone } = require('../../data/defaults')
 
 const event = (source = '', title = '', description = '', location = '', startDate, endDate) => {
   return {
@@ -10,8 +11,8 @@ const event = (source = '', title = '', description = '', location = '', startDa
     title,
     description,
     location,
-    startDate: startDate.format(),
-    endDate: endDate.format()
+    startDate: startDate.tz(defaultTimeZone).format(),
+    endDate: endDate.tz(defaultTimeZone).format(),
   }
 }
 
@@ -29,13 +30,11 @@ const iCalToEvents = (source, iCalData) => {
     moment(jCalEvent.getFirstPropertyValue("dtstart").toString(), jCalDateFormat),
     moment(jCalEvent.getFirstPropertyValue("dtend").toString(), jCalDateFormat)
   ))
-
   return eventList
 }
 
 const meetupVenueToEventLocation = (venue) => {
   var location = ''
-
   if (venue != null) {
     location = venue.name
       + '\n'
@@ -43,18 +42,17 @@ const meetupVenueToEventLocation = (venue) => {
       + '\n'
       + venue.city
   }
-
   return location
 }
 
-const millisecondsToHours = 360000
-const meetupDateFormat = "YYYY-MM-DD HH:mm Z"
-
-const meetupStartTimeToMoment = (meetup) => moment(meetup.local_date + " " + meetup.local_time + " " + meetup.utc_offset * millisecondsToHours, meetupDateFormat)
+const meetupStartTimeToMoment = (meetup) => {
+  const millisecondsToHours = 360000
+  const meetupDateFormat = "YYYY-MM-DD HH:mm Z"
+  return moment(meetup.local_date + " " + meetup.local_time + " " + meetup.utc_offset * millisecondsToHours, meetupDateFormat)
+}
 
 const meetupDataToEvents = (source, data) => {
   const meetupDurationFormat = "ms";
-
   const eventList = data.map(meetup => event(
     'meetups: ' + source,
     meetup.name,
@@ -63,7 +61,6 @@ const meetupDataToEvents = (source, data) => {
     meetupStartTimeToMoment(meetup),
     meetupStartTimeToMoment(meetup).add(meetup.duration, meetupDurationFormat)
   ))
-
   return eventList
 }
 
