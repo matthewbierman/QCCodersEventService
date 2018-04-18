@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+﻿const fs = require('fs')
 const iCal = require('ical.js')
 const moment = require('moment-timezone')
 const axios = require('axios')
@@ -46,13 +46,13 @@ const meetupVenueToEventLocation = (venue) => {
 }
 
 const meetupStartTimeToMoment = (meetup) => {
-  const millisecondsToHours = 360000
+  const millisecondsToHours = 3600000
   const meetupDateFormat = "YYYY-MM-DD HH:mm Z"
-  return moment(meetup.local_date + " " + meetup.local_time + " " + meetup.utc_offset * millisecondsToHours, meetupDateFormat)
+  return moment(meetup.local_date + " " + meetup.local_time + " " + (meetup.utc_offset / millisecondsToHours), meetupDateFormat)
 }
 
 const meetupDataToEvents = (source, data) => {
-  const meetupDurationFormat = "ms";
+  const meetupDurationFormat = "ms"
   const eventList = data.map(meetup => event(
     'meetups: ' + source,
     meetup.name,
@@ -78,7 +78,7 @@ const getPastEventListFromMeetup = () => axios.get(meetupsAPIFetchEventsURL + "?
 
 const getUpcomingEventListFromMeetup = () => axios.get(meetupsAPIFetchEventsURL + "?" + meetupsUpcoming10EventsQueryString)
 
-const flattenArrays = (arrays) => [].concat.apply([], arrays);
+const flattenArrays = (arrays) => [].concat.apply([], arrays)
 
 const getEventList = () =>
   Promise.all(
@@ -96,6 +96,6 @@ const getEventList = () =>
   )
     .then(res => flattenArrays(res))
 
-module.exports = getEventList;
+module.exports = getEventList
 
 
