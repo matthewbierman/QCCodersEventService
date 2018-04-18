@@ -4,7 +4,7 @@ const moment = require('moment')
 const axios = require('axios')
 const { testICalURL, testICalLocalPath, productionICalURL, meetupsAPIFetchEventsURL, meetupsPast10EventsQueryString, meetupsUpcoming10EventsQueryString } = require('../../data/endpoints')
 
-const event = (source= '', title = '', description = '', location = '', startDate, endDate) => {
+const event = (source = '', title = '', description = '', location = '', startDate, endDate) => {
   return {
     source,
     title,
@@ -16,25 +16,25 @@ const event = (source= '', title = '', description = '', location = '', startDat
 }
 
 const iCalToEvents = (source, iCalData) => {
-
-  const jCal = iCal.parse(iCalData);
-  const comp = new iCal.Component(jCal);
-  const jCalEvents = comp.getAllSubcomponents("vevent");
+  const jCalDateFormat = "YYYY-MM-DDTHH:mm:ssZ"
+  const jCal = iCal.parse(iCalData)
+  const comp = new iCal.Component(jCal)
+  const jCalEvents = comp.getAllSubcomponents("vevent")
 
   const eventList = jCalEvents.map(jCalEvent => event(
     "ical: " + source,
     jCalEvent.getFirstPropertyValue("summary"),
     '',
     jCalEvent.getFirstPropertyValue("location"),
-    moment(jCalEvent.getFirstPropertyValue("dtstart").toString()),
-    moment(jCalEvent.getFirstPropertyValue("dtend").toString())
+    moment(jCalEvent.getFirstPropertyValue("dtstart").toString(), jCalDateFormat),
+    moment(jCalEvent.getFirstPropertyValue("dtend").toString(), jCalDateFormat)
   ))
 
   return eventList
 }
 
 const meetupVenueToEventLocation = (venue) => {
-  var location = '';
+  var location = ''
 
   if (venue != null) {
     location = venue.name
@@ -44,12 +44,15 @@ const meetupVenueToEventLocation = (venue) => {
       + venue.city
   }
 
-  return location;
+  return location
 }
 
-const meetupDataToEvents = (source, data) => {
+const millisecondsToHours = 360000
+const meetupDateFormat = "YYYY-MM-DD HH:mm Z"
 
-  const meetupDateFormat = "YYYY-MM-DD HH:mm";
+const meetupStartTimeToMoment = (meetup) => moment(meetup.local_date + " " + meetup.local_time + " " + meetup.utc_offset * millisecondsToHours, meetupDateFormat)
+
+const meetupDataToEvents = (source, data) => {
   const meetupDurationFormat = "ms";
 
   const eventList = data.map(meetup => event(
@@ -57,8 +60,8 @@ const meetupDataToEvents = (source, data) => {
     meetup.name,
     meetup.description,
     meetupVenueToEventLocation(meetup.venue),
-    moment(meetup.local_date + " " + moment.local_time, meetupDateFormat),
-    moment(meetup.local_date + " " + moment.local_time, meetupDateFormat).add(meetup.duration, meetupDurationFormat)
+    meetupStartTimeToMoment(meetup),
+    meetupStartTimeToMoment(meetup).add(meetup.duration, meetupDurationFormat)
   ))
 
   return eventList
@@ -94,7 +97,7 @@ const getEventList = () =>
         .catch(e => console.log(e))
     ]
   )
-  .then(res => flattenArrays(res))
+    .then(res => flattenArrays(res))
 
 module.exports = getEventList;
 
