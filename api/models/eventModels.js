@@ -45,10 +45,11 @@ const meetupVenueToEventLocation = (venue) => {
   return location
 }
 
+
 const meetupStartTimeToMoment = (meetup) => {
-  const millisecondsToHours = 3600000
-  const meetupDateFormat = "YYYY-MM-DD HH:mm Z"
-  return moment(meetup.local_date + " " + meetup.local_time + " " + (meetup.utc_offset / millisecondsToHours), meetupDateFormat)
+  const meetupDateFormat = "YYYY-MM-DD HH:mm"
+  const meetupOffsetFormat = "ms"
+  return moment.utc(meetup.local_date + " " + meetup.local_time, meetupDateFormat, true).subtract(meetup.utc_offset, meetupOffsetFormat)
 }
 
 const meetupDataToEvents = (source, data) => {
